@@ -1,0 +1,14 @@
+{
+	"name": "DiscordBot",
+	"version": "1.0.0",
+	"Description": "A generic DiscordBot structure",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Jacob Alford",
+	"license": "ISC",
+	"dependencies": {
+		"discord.js": "^11.3.2"
+	}
+}
