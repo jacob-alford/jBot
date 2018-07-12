@@ -4,7 +4,8 @@ Uses Node to compile javascript.  Requires discord.js.
 
 ## Steps to deployment:
 * Install node
-* Create a discord apps in discord developer "My Apps" section
+* Install discord.js using npm
+* Create a discord app in discord developer "My Apps" section
 * Download project files
 * Plug in your Discord Bot's Token Key
 * Invite "my apps" Discord Bot to discord channel (must be administrator)
