@@ -2,6 +2,9 @@
 A generic DiscordBot structure with simple command creation.  Automatically creates help, [cmd]-help, and checks both permissions and argument validity.
 Uses Node to compile javascript.  Requires discord.js.
 
+## Samples Branch
+Has a few sample commands to show proper usage.
+
 ## Steps to deployment:
 * Install node
 * Install discord.js using npm
