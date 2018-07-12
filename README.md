@@ -1,5 +1,5 @@
 # jBot
-A generic DiscordBot structure with simple command creation.  Automatically creates help, [cmd]-help, and checks both permissions and argument validity.
+A generic DiscordBot structure with simple command creation.  Automatically creates help, [cmd]-help, and checks both permissions and argument validity.  Allows nested command structures in a feature called "interactive" commands.  Allows the user to access a set of commands that's isolated from primary commands.  An interactive command could look something like a game of tic tac toe.
 Uses Node to compile javascript.  Requires discord.js.
 
 ## Samples Branch
