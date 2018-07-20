@@ -774,4 +774,4 @@ bot.on('message', (message)=>{
 
 
 bot.on('error', console.error);
-bot.login('NDQ5NzMyNzQ5NzI5NzI2NDc0.DjKwgw.kaDV0Md4jBwM-Ro6hk8Yy-sRZLk');
+bot.login('--Bot Login token goes here--');
