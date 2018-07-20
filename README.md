@@ -32,7 +32,7 @@ argsCount | The number of arguments expected when the command is called. | Numbe
 argsEnforced | Whether or not the command will require the exact number of arguments in order to execute. | Boolean | **(?)** False
 args | The friendly names and descriptions of every available argument. | Object |  **(?)** undefined
 permissionsLevel | The required internal permissions level for a command to be executed.  References the users in users.json. | Number | **(?)** 0
-disabled | Whether or not the function will executed if called. | boolean | **(?)** false
+disabled | Whether or not the function will execute if called. | boolean | **(?)** false
 #### Example
 ```
 commands["oceanman"] = new commandConstructor({
@@ -41,5 +41,43 @@ commands["oceanman"] = new commandConstructor({
 	description:`OCEANMAN`,
 	category:"Fun",
 	argsEnforced:false
+});
+```
+### Interactive Command Constructor
+#### Calling a new interactive command
+```commands["*New Command Name*"] = new interactiveCommand({initial command},{captive command);```
+##### Initial Command
+Use ```commands["*New Command Name*"] = new commandConstructor({options});``` for this argument, specifying *int* for category for purposes of the built-in 'help' command.
+##### Captive Command
+This argument takes an object, which contains at least one function (or else the command *should* be a primary command), and also may contain any other property.
+#### Example
+```
+commands["remember"] = new interactiveCommand(new commandConstructor({
+	cmdName:"remember",
+	execute:args => args, //Note, this execute will never be called.  A default execute is assigned.
+	description:`An interactive command that stores something in memory!`,
+	category:"Utility",
+	argsEnforced:false
+}),{
+	"memory":[],
+	"write":new commandConstructor(args => {
+		users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands.memory = users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands.memory.concat(args);
+		users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands.readout.execute(args);
+	},"Pushes entry into the closest memory slot.","int",1,0),
+	"readout":new commandConstructor(args => {
+		let output = "";
+		for(i=0;i<users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands.memory.length;i++){
+			output += `[${i}]: ${users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands.memory[i]}\n`;
+		}
+		if(!(output === "")){
+			globalMessage.channel.send(output);
+		}else{
+			globalMessage.channel.send("Memory is blank!");
+		}
+	},"Posts what's stored in memory.","int",0,0),
+	"clear":new commandConstructor(args => {
+		users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands.memory = [];
+		globalMessage.channel.send("Memory cleared!");
+	},"Clears user memory for the 'remember' command.","int",0,0)
 });
 ```
