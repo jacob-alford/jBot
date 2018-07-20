@@ -20,7 +20,7 @@ The following is a reference for creating your own commands using the built-in c
 ### Primary Command Constructor
 #### Calling a new primary command
 ```commands["*New Command Name*"] = new commandConstructor({options});```
-#### Options' Properties and Description
+#### Options' Properties and Descriptions
 ##### (?) denotes an optional declaration
 Property Name | Description | Type | Required/Default Value
 ------------ | ------------- | ------------- | -------------
@@ -33,3 +33,11 @@ argsEnforced | Whether or not the command will require the exact number of argum
 args | The friendly names and descriptions of every available argument. | Object |  **(?)** undefined
 permissionsLevel | The required internal permissions level for a command to be executed.  References the users in users.json. | Number | **(?)** 0
 disabled | Whether or not the function will executed if called. | boolean | **(?)** false
+#### Example
+```commands["oceanman"] = new commandConstructor({
+	cmdName:"oceanman",
+	execute:args => globalMessage.channel.send(oceanman),
+	description:`OCEANMAN`,
+	category:"Fun",
+	argsEnforced:false
+});```
