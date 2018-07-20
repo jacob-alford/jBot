@@ -51,6 +51,7 @@ Use ```commands["*New Command Name*"] = new commandConstructor({options});``` fo
 ##### Captive Command
 This argument takes an object, which contains at least one function (or else the command *should* be a primary command), and also may contain any other property.
 #### Example
+The following omits the subcommands for brevity.  They will act as regular commands, and require that *int* be specified in category delcaration.
 ```
 commands["remember"] = new interactiveCommand(new commandConstructor({
 	cmdName:"remember",
@@ -60,24 +61,8 @@ commands["remember"] = new interactiveCommand(new commandConstructor({
 	argsEnforced:false
 }),{
 	"memory":[],
-	"write":new commandConstructor(args => {
-		users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands.memory = users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands.memory.concat(args);
-		users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands.readout.execute(args);
-	},"Pushes entry into the closest memory slot.","int",1,0),
-	"readout":new commandConstructor(args => {
-		let output = "";
-		for(i=0;i<users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands.memory.length;i++){
-			output += `[${i}]: ${users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands.memory[i]}\n`;
-		}
-		if(!(output === "")){
-			globalMessage.channel.send(output);
-		}else{
-			globalMessage.channel.send("Memory is blank!");
-		}
-	},"Posts what's stored in memory.","int",0,0),
-	"clear":new commandConstructor(args => {
-		users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands.memory = [];
-		globalMessage.channel.send("Memory cleared!");
-	},"Clears user memory for the 'remember' command.","int",0,0)
+	"write":new commandConstructor(...),
+	"readout":new commandConstructor(...),
+	"clear":new commandConstructor(...)
 });
 ```
