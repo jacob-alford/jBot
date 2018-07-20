@@ -8,6 +8,9 @@ Contains the raw code, without any sample commands.  Use the examples below to w
 ## Samples Branch
 Conatains several sample commands for you to reference and test.
 
+## My Implementation Branch
+My personal implementation of jBot.  Contains several versatile functions that are listed in the readme in that branch.
+
 ## Steps to deployment:
 * Install node
 * Install discord.js using npm
