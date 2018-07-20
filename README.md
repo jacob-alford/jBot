@@ -22,14 +22,14 @@ The following is a reference for creating your own commands using the built-in c
 ```commands["*New Command Name*"] = new commandConstructor({options});```
 #### Options' Properties and Description
 ##### (?) denotes an optional declaration
-Property Name|Description|Type|Default Value
+Property Name |Description |Type | Default Value
 ------------ | -------------
-cmdName|A repeat of the name given to the command, used to create the help command.|String|
-execute|The function called when the command is executed.  Normally contains ```globalMessage.channel.send(...);```|Function|
-description|The friendly description for the command displayed with the built-in help command.|String|
-category|The friendly category of the command displayed with the built-in help command.|String|
-argsCount **(?)**|The number of arguments expected when the command is called.|Number|0
-argsEnforced **(?)**|Whether or not the command will require the exact number of arguments in order to execute.|Boolean|False
-args **(?)**|The friendly names and descriptions of every available argument.|Object|
-permissionsLevel **(?)**|The required internal permissions level for a command to be executed.  References the users in users.json.|Number|0
-disabled **(?)**|Whether or not the function will executed if called.|boolean|false
+cmdName | A repeat of the name given to the command, used to create the help command. | String |
+execute | The function called when the command is executed.  Normally contains ```globalMessage.channel.send(...);``` | Function |
+description | The friendly description for the command displayed with the built-in help command. | String |
+category | The friendly category of the command displayed with the built-in help command. | String |
+argsCount **(?)** | The number of arguments expected when the command is called. | Number | 0
+argsEnforced **(?)** | Whether or not the command will require the exact number of arguments in order to execute. | Boolean | False
+args **(?)** | The friendly names and descriptions of every available argument. | Object |
+permissionsLevel **(?)** | The required internal permissions level for a command to be executed.  References the users in users.json. | Number | 0
+disabled **(?)** | Whether or not the function will executed if called. | boolean | false
