@@ -3,7 +3,10 @@ A generic DiscordBot structure with simple command creation.  Automatically crea
 Uses Node to compile javascript.  Requires discord.js.
 
 ## Master Branch
-As opposed to the 'Samples' branch which contains several sample commands, the master branch contains only the "help" command.
+Contains the raw code, without any sample commands.  Use the examples below to write your first command!
+
+## Samples Branch
+Conatains several sample commands for you to reference and test.
 
 ## Steps to deployment:
 * Install node
