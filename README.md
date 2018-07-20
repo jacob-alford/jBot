@@ -18,6 +18,7 @@ say | Makes me say anything in the current, or specified channel.
 ## Interactive Commands
 ### RPN
 A simple reverse polish notation calculator!
+
 Name | Description
 ---- | ----
 readout | Displays the current stack.
