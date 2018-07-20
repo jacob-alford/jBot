@@ -45,7 +45,7 @@ commands["oceanman"] = new commandConstructor({
 ```
 ### Interactive Command Constructor
 #### Calling a new interactive command
-```commands["*New Interactive Command Name*"] = new interactiveCommand({initial command},{captive command);```
+```commands["*New Interactive Command Name*"] = new interactiveCommand({initial command},{captive commands});```
 ##### Initial Command
 Use ```commands["*New Interactive Command Name*"] = new commandConstructor({options});``` for this argument, specifying *int* for category for purposes of the built-in 'help' command.
 ##### Captive Command
