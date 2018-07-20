@@ -34,10 +34,12 @@ args | The friendly names and descriptions of every available argument. | Object
 permissionsLevel | The required internal permissions level for a command to be executed.  References the users in users.json. | Number | **(?)** 0
 disabled | Whether or not the function will executed if called. | boolean | **(?)** false
 #### Example
-```commands["oceanman"] = new commandConstructor({
+```
+commands["oceanman"] = new commandConstructor({
 	cmdName:"oceanman",
 	execute:args => globalMessage.channel.send(oceanman),
 	description:`OCEANMAN`,
 	category:"Fun",
 	argsEnforced:false
-});```
+});
+```
