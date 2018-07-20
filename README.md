@@ -23,7 +23,7 @@ The following is a reference for creating your own commands using the built-in c
 #### Options' Properties and Description
 ##### (?) denotes an optional declaration
 Property Name | Description | Type | Required/Default Value
------------- | -------------
+------------ | ------------- | ------------- | -------------
 cmdName | A repeat of the name given to the command, used to create the help command. | String | Required
 execute | The function called when the command is executed.  Normally contains ```globalMessage.channel.send(...);``` | Function | Required
 description | The friendly description for the command displayed with the built-in help command. | String | Required
