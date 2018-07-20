@@ -8,61 +8,77 @@ let users = require("./users.json"); //Connect to the users JSON file
 
 //------------Command Constructors---------------------------
 //Used when instanciating a new command.  Call commands["name"] = new commandConstructor(...); with the appropriate arguments filled in according to the below:
-//fn (function) -> The function to be run when the command is called
-//desc (string) -> a user-friendly description displayed when help is called
-//cat (string) -> the category to be organized under when help is called
-//argCount (number) -> the number of arguments expected for the function to run.
-//perms (number between 0 and 10) - > the required permissions level to execute the command
-//Options (object) -> Used for several things like [command]-help construction, see below for structure [OPTIONAL]
-/* options = {
-							args:["args1 friendly name":"args1 description", ... ,"argsN friendly name":"argsN description"],
-							cmdName:"name" //Used when declaring an interactive function such that the anonymous function has a name
-							interactive:true/false //Used when declaring an interactive function.  Must be paired with a cmdName.
-						}*/
-function commandConstructor(fn,desc,cat,argCount,perms,options){
-	if(!(options===undefined)){
-		if(options.interactive){
-			this.cmdName = options.cmdName;
-		}
+//See GitHub for proper usage
+function commandConstructor(options){
+	if(!(options.cmdName === undefined) && (typeof options.cmdName == "string")){
+		this.cmdName = options.cmdName;
+	}else{
+		console.error(`Error when delcaring new command ${this}, missing or wrong type for cmdName!`);
 	}
-	this.execute = fn;
-	this.description = desc;
-	this.category = cat;
-	this.argsCount = argCount;
-	this.interactive = false; //Will become true if the interactive command constructor is called.
-	this.permissionsLevel = perms;
-	if(!(options===undefined)){
+	if(!(options.execute === undefined) && (typeof options.execute == "function")){
+		this.execute = options.execute;
+	}else{
+		console.error(`Error when delcaring new command ${this}, missing or wrong type for execute!`);
+	}
+	if(!(options.description === undefined) && (typeof options.description == "string")){
+		this.description = options.description;
+	}else{
+		console.error(`Error when delcaring new command ${this}, missing or wrong type for description!`);
+	}
+	if(!(options.category === undefined) && (typeof options.category == "string")){
+		this.category = options.category;
+	}else{
+		console.error(`Error when delcaring new command ${this}, missing or wrong type for category!`);
+	}
+	if(!(options.argsCount === undefined) && (!isNaN(options.argsCount))){
+		this.argsCount = options.argsCount;
+	}else{
+		this.argsCount = 0;
+	}
+	if(!(options.permissionsLevel === undefined) && (!isNaN(options.permissionsLevel))){
+		this.permissionsLevel = options.permissionsLevel;
+	}else{
+		this.permissionsLevel = 0;
+	}
+	if(!(options.args === undefined) && (typeof options.args == "object")){
 		this.args = options.args;
+	}
+	if(!(options.argsEnforced === undefined) && (typeof options.argsEnforced == "boolean")){
+		this.argsEnforced = options.argsEnforced;
+	}else{
+			if(options.argsCount > 0){
+				this.argsEnforced = true; //If there are arguments
+			}else{
+				this.argsEnforced = false; //If there aren't arguments
+			}
+		}
+	this.interactive = false; //Will become true if the interactive command constructor is called.
+	if(!(options.disabled === undefined) && (typeof options.disabled == "boolean")){
+		this.disabled = options.disabled;
+	}else{
+		this.disabled = false;
 	}
 	let unique = true;
 	for(i=0;i<commandCategories.length;i++){
-		if(commandCategories[i] == cat){
+		if(commandCategories[i] == options.category){
 			unique = false;
 		}
 	}
-	if((unique) && (cat != "N/A") && (cat != "int")){
-		commandCategories.push(cat);
+	if((unique) && (options.category != "N/A") && (options.category != "int")){
+		commandCategories.push(options.category);
 	}
-	if(!(cat=="int")){ //Avoids creating a help command for subcommands in interactive primary commands.
-		if(options === undefined){
-				helpConstructor(this);
-			}else{
-				helpConstructor(this,options);
-			}
+	if(!(options.category=="int")){ //Avoids creating a help command for subcommands in interactive primary commands.
+				helpConstructor(options);
 	}
 }
 
 //This constructs the [cmd]-help command.
 //This should only be called if the function was manually created in the commands object.
-//The helpConstructor is called automatically in commandConstructor.
-function helpConstructor(name,options){
-	if(!(options === undefined)){ //Options specified
-		if(!(options.cmdName === undefined)){ //If a name is given
-			name = options.cmdName;
-		}
-	}
-	commands[name + "-help"] = {
-		execute:function(args){
+function helpConstructor(options){
+	name = options.cmdName;
+	commands[name + "-help"] = new commandConstructor({
+		cmdName:name,
+		execute:(args) => {
 			let output = "";
 			output += "Proper Usage: `" + name + "` ";
 			if(!(commands[name].args === undefined)){
@@ -76,28 +92,14 @@ function helpConstructor(name,options){
 			}
 			globalMessage.channel.send(output);
 		},
-		argsCount:0,
-		interactive: false,
-		permissionsLevel: 0
-}
+		description:"A help function",
+		category:"int",
+		argsEnforced:false
+	});
 }
 
 //Interactive commands prevent top-level commands from being executed, and instead run their own subset of commands.
-//Interactive commands are user-specific, and can have user-specific memory. [THIS MAY BE BROKEN AS OF V1.0, RESASON UNKNOWN]
-//Use command["name"] = new interactiveConstructor(options); to instanciate a new interactive command.
-//Note, the mandatory 'help' and 'exit' functions will be created automatically.
-//Options (object) -> used for passing every subcommand or memory unit, see below for structure.
-//Note: the 'cat' category parameter MUST be set to "int" for interactive commands while using commandConstructor in subcommands.
-/* options = {
-							"memory":[], <- memory can take any type, but is typically used in the below functions.
-							"function1Name":new commandConstructor(...), <- subroutine executed when interactive mode is active.
-							"function2Name":new commandConstructor(...), <- Must pass 'int' in the category argument for subroutine declaration.
-							"function3Name":new commandConstructor(...),
-										...
-							"functionNName":new commandConstructor(...)
-						}*/
-//cmd (object) -> the command to call in order to bring focus to the subset of commands.  See below for structure:
-// Use cmd = new commandConstructor(); to pass in cmd.
+//See GitHub for proper usage
 function interactiveCommand(cmd,options){
 
 	this.execute = (args) => {
@@ -117,21 +119,32 @@ function interactiveCommand(cmd,options){
 	for(subProperty in options){
 		this.commands[subProperty] = options[subProperty];
 	}
+	this.commands["exit"] = new commandConstructor({
+		cmdName:"exit",
+		execute:(args) => {
+			globalMessage.channel.send("*You are no longer in interactive mode!*");
+			users[globalMessage.author.username].interactiveMode = false;
+		},
+		description:`Exits '${this}', and returns to primary commands.`,
+		category:"int",
+		argsEnforced:false
+	});
+	this.commands["help"] = new commandConstructor({
+		cmdName:"help",
+		execute:(args) => {
+			let output = `You are currently in interactive mode.  The available options for '${cmd.cmdName}' are:\n`;
+				for(cmds in users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands){
+					if(!(cmds.includes("help")) && !(users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[cmds].execute === undefined)){
+						output += "[" + users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[cmds].permissionsLevel + "]`" + cmds + "` " + users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[cmds].description + "\n";
+					}
+			}
+			globalMessage.channel.send(output);
+		},
+		description:`Lists every available command in subroutine!`,
+		category:"int",
+		argsEnforced:false
+	});
 
-	this.commands["exit"] = new commandConstructor(function(args){
-		globalMessage.channel.send("*You are no longer in interactive mode!*");
-		users[globalMessage.author.username].interactiveMode = false;
-	},`Exits '${this}', and returns to primary commands.`,"int",0,0);
-
-	this.commands["help"] = new commandConstructor(function(args){
-		let output = `You are currently in interactive mode.  The available options for '${cmd.cmdName}' are:\n`;
-			for(cmds in users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands){
-				if(!(cmds.includes("help")) && !(users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[cmds].execute === undefined)){
-					output += "[" + users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[cmds].permissionsLevel + "]`" + cmds + "` " + users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[cmds].description + "\n";
-				}
-		}
-		globalMessage.channel.send(output);
-	},"Lists every available command in subroutine!","int",0,0);
 }
 
 //------------Core Command Structure Samples, use command["name"] = new commandConstructor(...) to create a new command---------------
@@ -145,8 +158,14 @@ let commands = {
 			for(categories in cat){
 				output += "__" + cat[categories] + "__\n";
 				for(cmd in commands){
-					if((commands[cmd].category == cat[categories]) && !(cmd.includes("help"))){
-						output += "[" + commands[cmd].permissionsLevel + "]`" + cmd + "` " + commands[cmd].description + "\n";
+					if(commands[cmd].disabled){
+						if((commands[cmd].category == cat[categories]) && !(cmd.includes("help"))){
+							output += "~~[" + commands[cmd].permissionsLevel + "]" + cmd + " " + commands[cmd].description + "~~\n";
+						}
+					}else{
+						if((commands[cmd].category == cat[categories]) && !(cmd.includes("help"))){
+							output += "[" + commands[cmd].permissionsLevel + "]`" + cmd + "` " + commands[cmd].description + "\n";
+						}
 					}
 				}
 				output += "\n";
@@ -157,6 +176,7 @@ let commands = {
 		category:"Utility",
 		argsCount:0,
 		interactive:false,
+		argsEnforced:false,
 		permissionsLevel:0
 	}
 }
@@ -177,7 +197,6 @@ bot.on('message', (message)=>{
 	globalMessage = message;
 	let command = message.content.split(" ");
 	let args = [];
-
 	for(i=2;i<command.length;i++){
 		args[i-2] = command[i];
 	}
@@ -201,20 +220,30 @@ bot.on('message', (message)=>{
 				}
 			}
 		}
-
 		if(!(users[globalMessage.author.username].interactiveMode)){ //If the user is in primary operations mode
 			if(commands[command[1]] === undefined){ //Unrecognized command
 				globalMessage.channel.send(`Unrecognized command: '${command[1]}'`);
 			}else{
-				if(users[globalMessage.author.username].permissionLevel >= commands[command[1]].permissionsLevel){ //If the user has sufficient permissions
-					if(args.length != commands[command[1]].argsCount){ //If the arguments are of the proper number
-						globalMessage.channel.send('Wrong number of arguments for "' + command[1] + '."');
-						eval(commands[command[1] + "-help"].execute(args));
+				if(!commands[command[1]].argsEnforced){
+					let temp = "";
+					for(let c=0;c<args.length;c++){
+						temp+=args[c] + " ";
+					}
+					args = temp;
+				}
+				if(!(commands[command[1]].disabled)){
+						if(users[globalMessage.author.username].permissionLevel >= commands[command[1]].permissionsLevel){ //If the user has sufficient permissions
+						if((args.length != commands[command[1]].argsCount) && commands[command[1]].argsEnforced){ //If the arguments are of the proper number
+							globalMessage.channel.send('Wrong number of arguments for "' + command[1] + '."');
+							eval(commands[command[1] + "-help"].execute(args));
+						}else{
+							eval(commands[command[1]].execute(args));
+						}
 					}else{
-						eval(commands[command[1]].execute(args));
+						globalMessage.channel.send(`You don't have sufficient permissions to execute ${command[1]}`);
 					}
 				}else{
-					globalMessage.channel.send(`You don't have sufficient permissions to execute ${command[1]}`);
+					globalMessage.channel.send(`${command[1]} has been disabled.`);
 				}
 			}
 		}else{
@@ -222,7 +251,7 @@ bot.on('message', (message)=>{
 				globalMessage.channel.send(`Unrecognized command: '${command[1]} in ${users[globalMessage.author.username].currentCommand}.'`);
 			}else{
 				if(users[globalMessage.author.username].permissionLevel >= users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].permissionsLevel){ //If the user has sufficient interactive permissions
-					if(args.length != users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].argsCount){ //If the arguments are of the proper number
+					if((args.length != users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].argsCount) && (args.length != users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].argsEnforced)){ //If the arguments are of the proper number
 						globalMessage.channel.send("Wrong number of arguments for " + command[1] + ".");
 					}else{
 						eval(users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].execute(args));
@@ -236,4 +265,4 @@ bot.on('message', (message)=>{
 
 
 bot.on('error', console.error);
-bot.login('-BOT-Token-GOES-HERE-');
+bot.login('--BOT LOGIN TOKEN GOES HERE--');
