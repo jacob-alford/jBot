@@ -22,7 +22,7 @@ The following is a reference for creating your own commands using the built-in c
 ```commands["*New Command Name*"] = new commandConstructor({options});```
 #### Options' Properties and Description
 ##### (?) denotes an optional declaration
-Property Name |Description |Type | Default Value
+Property Name | Description | Type | Default Value
 ------------ | -------------
 cmdName | A repeat of the name given to the command, used to create the help command. | String |
 execute | The function called when the command is executed.  Normally contains ```globalMessage.channel.send(...);``` | Function |
