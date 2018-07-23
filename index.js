@@ -129,22 +129,22 @@ function commandConstructor(options){
 	if(!(options.cmdName === undefined) && (typeof options.cmdName == "string")){
 		this.cmdName = options.cmdName;
 	}else{
-		console.error(`Error when delcaring new command ${this}, missing or wrong type for cmdName!`);
+		console.error(`Error when delcaring new command, missing or wrong type for cmdName!`);
 	}
 	if(!(options.execute === undefined) && (typeof options.execute == "function")){
 		this.execute = options.execute;
 	}else{
-		console.error(`Error when delcaring new command ${this}, missing or wrong type for execute!`);
+		console.error(`Error when delcaring new command, missing or wrong type for execute!`);
 	}
 	if(!(options.description === undefined) && (typeof options.description == "string")){
 		this.description = options.description;
 	}else{
-		console.error(`Error when delcaring new command ${this}, missing or wrong type for description!`);
+		console.error(`Error when delcaring new command, missing or wrong type for description!`);
 	}
 	if(!(options.category === undefined) && (typeof options.category == "string")){
 		this.category = options.category;
 	}else{
-		console.error(`Error when delcaring new command ${this}, missing or wrong type for category!`);
+		console.error(`Error when delcaring new command, missing or wrong type for category!`);
 	}
 	if(!(options.argsCount === undefined) && (!isNaN(options.argsCount))){
 		this.argsCount = options.argsCount;
@@ -189,11 +189,11 @@ function commandConstructor(options){
 }
 
 //This constructs the [cmd]-help command.
-//This should only be called if the function was manually created in the commands object.
+//This should only never be called.
 function helpConstructor(options){
 	let name = options.cmdName;
 	commands[name + "-help"] = new commandConstructor({
-		cmdName:name,
+		cmdName:name + "-help",
 		execute:(args) => {
 			let output = "";
 			output += "Proper Usage: `" + name + "` ";
@@ -213,34 +213,47 @@ function helpConstructor(options){
 		argsEnforced:false
 	});
 }
-
-function interactiveHelpConstructor(options){
-	let name = options.cmdName;
-	users[globalMessage.author.username].interactiveCommands[name + "-help"] = new commandConstructor({
-		cmdName:name,
-		execute:(args) => {
-			let output = "";
-			output += "Proper Usage: `" + name + "` ";
-			if(!(users[globalMessage.author.username].interactiveCommands[name].args === undefined)){
-				for(args in users[globalMessage.author.username].interactiveCommands[name].args){
-					output += "`" + users[globalMessage.author.username].interactiveCommands[name].args[args].name + "` ";
-				}
-				output += "\n";
-				for(argu in users[globalMessage.author.username].interactiveCommands[name].args){
-					output += "__" + users[globalMessage.author.username].interactiveCommands[name].args[argu].name + ":__ " + users[globalMessage.author.username].interactiveCommands[name].args[argu].desc + "\n";
+//This constructs every subcommand-help for interactive commands.
+function interactiveHelpConstruct(){
+	for(int in commands){
+		if(commands[int].interactive){
+			for(sub in commands[int].commands){
+				if(!(commands[int].commands[sub].cmdName === undefined)){
+					const name = sub;
+					if(!(name.includes("help"))){
+							commands[int].commands[name + "-help"] = new commandConstructor({
+							cmdName:name + "-help",
+							execute:args => {
+								let output = "";
+								output += "Proper Usage: `" + name + "` ";
+								if(!(commands[int].commands[name].args === undefined)){
+									for(argo in commands[int].commands[name].args){
+										const argumentName = commands[int].commands[name].args[argo].name;
+										output += "`" + argumentName + "` ";
+									}
+									output += "\n";
+									for(argu in commands[int].commands[name].args){
+										const argumentName = commands[int].commands[name].args[argu].name;
+										const argumentDesc = commands[int].commands[name].args[argu].desc;
+										output += "__" + argumentName + ":__ " + argumentDesc + "\n";
+									}
+								}
+								globalMessage.channel.send(output);
+							},
+							description:"A help function",
+							category:"int",
+							argsEnforced:false
+						});
+					}
 				}
 			}
-			globalMessage.channel.send(output);
-		},
-		description:"A help function",
-		category:"int",
-		argsEnforced:false
-	});
+		}
+	}
 }
 
 //Interactive commands prevent top-level commands from being executed, and instead run their own subset of commands.
 //See GitHub for proper usage
-function interactiveCommand(cmd,options){
+function interactiveCommand(cmd,options,clientSide){
 
 	this.execute = (args) => {
 		globalMessage.channel.send("*You are now in interactive mode!*\nUse 'help' for more information, and 'exit' to escape back to primary commands.");
@@ -263,6 +276,7 @@ function interactiveCommand(cmd,options){
 		cmdName:"exit",
 		execute:(args) => {
 			globalMessage.channel.send("*You are no longer in interactive mode!*");
+			users[globalMessage.author.username].currentCommand = "";
 			users[globalMessage.author.username].interactiveMode = false;
 		},
 		description:`Exits '${cmd.cmdName}', and returns to primary commands.`,
@@ -273,9 +287,9 @@ function interactiveCommand(cmd,options){
 		cmdName:"help",
 		execute:(args) => {
 			let output = `You are currently in interactive mode.  The available options for '${cmd.cmdName}' are:\n`;
-				for(cmds in users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands){
-					if(!(cmds.includes("help")) && !(users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[cmds].execute === undefined)){
-						output += "[" + users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[cmds].permissionsLevel + "]`" + cmds + "` " + users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[cmds].description + "\n";
+				for(cmds in commands[cmd.cmdName].commands){
+					if(!(cmds.includes("help")) && !(commands[cmd.cmdName].commands[cmds].execute === undefined)){
+						output += "[" + commands[cmd.cmdName].commands[cmds].permissionsLevel + "]`" + cmds + "` " + commands[cmd.cmdName].commands[cmds].description + "\n";
 					}
 			}
 			globalMessage.channel.send(output);
@@ -284,7 +298,6 @@ function interactiveCommand(cmd,options){
 		category:"int",
 		argsEnforced:false
 	});
-
 }
 
 //------------Core Command Structure Samples, use command["name"] = new commandConstructor(...) to create a new command---------------
@@ -544,16 +557,16 @@ commands["rpn"] = new interactiveCommand(new commandConstructor({
 	category:"Utility",
 	argsEnforced:false,
 }),{
-	memory:[],
+	"memory":[],
 	"readout":new commandConstructor({
 		cmdName:"readout",
 		execute:args => {
 			let output = "";
-			if(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.length == 0){
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[0] = 0;
+			if(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].length == 0){
+				users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][0] = 0;
 			}
-			for(let i=users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.length-1;i>=0;i--){
-				output += `${(memoryResolve[i]===undefined) ? i-1:memoryResolve[i]}: ${users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[i]}\n`;
+			for(let i=users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].length-1;i>=0;i--){
+				output += `${(memoryResolve[i]===undefined) ? i-1:memoryResolve[i]}: ${users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][i]}\n`;
 			}
 			globalMessage.channel.send(output);
 		},
@@ -566,15 +579,15 @@ commands["rpn"] = new interactiveCommand(new commandConstructor({
 		execute:args => {
 			let input = Number(args[0]);
 			if(isNaN(input)){
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.unshift(0);
+				users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].unshift(0);
 			}else{
-				if(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[0]==0){
-					users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[0]=input;
+				if(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][0]==0){
+					users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][0]=input;
 				}else{
-					users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.unshift(input);
+					users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].unshift(input);
 				}
 			}
-			users[globalMessage.author.username].interactiveCommands["rpn"].commands["readout"].execute(args);
+			commands["rpn"].commands["readout"].execute(args);
 		},
 		description:"Adds a number to the stack!",
 		category:"int",
@@ -585,20 +598,31 @@ commands["rpn"] = new interactiveCommand(new commandConstructor({
 	"drop":new commandConstructor({
 		cmdName:"drop",
 		execute:args => {
-			users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.shift();
-			users[globalMessage.author.username].interactiveCommands["rpn"].commands["readout"].execute();
+			users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].shift();
+			commands["rpn"].commands["readout"].execute(args);
 		},
 		description:"Moves the stack downward, deleting x.",
+		category:"int",
+		argsEnforced:false
+	}),
+	"clear":new commandConstructor({
+		cmdName:"clear",
+		execute:args => {
+			users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"] = [];
+			globalMessage.channel.send("Memory has been cleared!");
+			commands["rpn"].commands["readout"].execute(args);
+		},
+		description:"Clears the stack.",
 		category:"int",
 		argsEnforced:false
 	}),
 	"swap":new commandConstructor({
 		cmdName:"swap",
 		execute:args => {
-			const b = users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[0];
-			users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[0] = users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[1];
-			users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[1] = b;
-			users[globalMessage.author.username].interactiveCommands["rpn"].commands["readout"].execute();
+			const b = users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][0];
+			users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][0] = users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][1];
+			users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][1] = b;
+			commands["rpn"].commands["readout"].execute(args);
 		},
 		description:"Swaps x and y.",
 		category:"int",
@@ -607,9 +631,9 @@ commands["rpn"] = new interactiveCommand(new commandConstructor({
 	"roll":new commandConstructor({
 		cmdName:"roll",
 		execute:args => {
-			users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.length] = users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[0];
-			users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.shift();
-			users[globalMessage.author.username].interactiveCommands["rpn"].commands["readout"].execute();
+			users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].length] = users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][0];
+			users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].shift();
+			commands["rpn"].commands["readout"].execute(args);
 		},
 		description:"Shifts all elements downward, and moves x up to the highest index.",
 		category:"int",
@@ -618,10 +642,10 @@ commands["rpn"] = new interactiveCommand(new commandConstructor({
 	"add":new commandConstructor({
 		cmdName:"add",
 		execute:args => {
-			if(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.length >= 2){
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[1] = Number(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[0]) + Number(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[1]);
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.shift();
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands["readout"].execute();
+			if(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].length >= 2){
+				users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][1] = Number(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][0]) + Number(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][1]);
+				users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].shift();
+				commands["rpn"].commands["readout"].execute(args);
 			}else{
 				globalMessage.channel.send("Nothing to add! Use 'enter' to fill in the stack.");
 			}
@@ -633,10 +657,10 @@ commands["rpn"] = new interactiveCommand(new commandConstructor({
 	"sub":new commandConstructor({
 		cmdName:"sub",
 		execute:args => {
-			if(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.length >= 2){
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[1] = Number(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[1]) - Number(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[0]);
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.shift();
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands["readout"].execute();
+			if(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].length >= 2){
+				users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][1] = Number(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][1]) - Number(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][0]);
+				users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].shift();
+				commands["rpn"].commands["readout"].execute(args);
 			}else{
 				globalMessage.channel.send("Nothing to subtract! Use 'enter' to fill in the stack.");
 			}
@@ -648,10 +672,10 @@ commands["rpn"] = new interactiveCommand(new commandConstructor({
 	"mult":new commandConstructor({
 		cmdName:"mult",
 		execute:args => {
-			if(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.length >= 2){
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[1] = Number(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[1]) * Number(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[0]);
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.shift();
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands["readout"].execute();
+			if(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].length >= 2){
+				users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][1] = Number(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][1]) * Number(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][0]);
+				users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].shift();
+				commands["rpn"].commands["readout"].execute(args);
 			}else{
 				globalMessage.channel.send("Nothing to multiply! Use 'enter' to fill in the stack.");
 			}
@@ -663,10 +687,10 @@ commands["rpn"] = new interactiveCommand(new commandConstructor({
 	"div":new commandConstructor({
 		cmdName:"div",
 		execute:args => {
-			if(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.length >= 2){
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[1] = Number(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[1]) / Number(users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory[0]);
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands.memory.shift();
-				users[globalMessage.author.username].interactiveCommands["rpn"].commands["readout"].execute();
+			if(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].length >= 2){
+				users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][1] = Number(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][1]) / Number(users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"][0]);
+				users[globalMessage.author.username].interactiveCommands["rpn"].longMemory["memory"].shift();
+				commands["rpn"].commands["readout"].execute(args);
 			}else{
 				globalMessage.channel.send("Nothing to divide! Use 'enter' to fill in the stack.");
 			}
@@ -676,17 +700,17 @@ commands["rpn"] = new interactiveCommand(new commandConstructor({
 		argsEnforced:false
 	}),
 });
-
 //-----------------The bot's name, and version number (if applicable)------------------
 var meta = {
 	"botname":"jBot", //Used as the qualifying command.  The bot will activate if this botname is called.
-	"version":"5.0"
+	"version":"6.0"
 }
 
 //------------DiscordBot's Core Execution---------------------
 for(user in users){
 	users[user].interactiveCheck = false;
 }
+interactiveHelpConstruct();
 
 bot.on('message', (message)=>{
 	globalMessage = message;
@@ -714,13 +738,26 @@ bot.on('message', (message)=>{
 		if(channels[globalMessage.channel.name] === undefined){ //If the current user of the bot is not in the users.json file, this will add them with default permissions (0)
 			channels[message.channel.name] = {"id":message.channel.id};
 		}
-
-		if(users[globalMessage.author.username].interactiveMode && !users[globalMessage.author.username].interactiveCheck){ //Assign the user their own copy of interactive functions.  This allows each interactive user their own slice of memory.
+		if(users[globalMessage.author.username].interactiveMode && !users[globalMessage.author.username].interactiveCheck){ //Assign the user their own memory units based on interactive functions.
 			users[globalMessage.author.username].interactiveCheck = true; //Ensures user only gets assigned commands once.  Will run on startup.
-			users[globalMessage.author.username].interactiveCommands = {};
+			if(users[globalMessage.author.username].interactiveCommands === undefined){
+				users[globalMessage.author.username].interactiveCommands = {};
+			}
 			for(fn in commands){
 				if(commands[fn].interactive){
-					users[globalMessage.author.username].interactiveCommands[fn] = commands[fn];
+					if(users[globalMessage.author.username].interactiveCommands[fn] === undefined){
+						users[globalMessage.author.username].interactiveCommands[fn] = {longMemory:{}}; // Any object that isn't a function will be stored in users.JSON under interactive commands > [cmdName] > longMemory
+					}
+					for(sub in commands[fn].commands){
+						if(commands[fn].commands[sub].cmdName === undefined){ //Not a subFunction
+							if(users[globalMessage.author.username].interactiveCommands[fn].longMemory[sub] === undefined){
+								users[globalMessage.author.username].interactiveCommands[fn].longMemory[sub] = [];
+							}
+							if(sub.includes("short")){ //For short term memory using sub_short, reset memory on restart.
+								users[globalMessage.author.username].interactiveCommands[fn].longMemory[sub] = [];
+							}
+						}
+					}
 				}
 			}
 		}
@@ -755,14 +792,14 @@ bot.on('message', (message)=>{
 				}
 			}
 		}else{
-			if(users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]] === undefined){ //If the interactive command in current command is undefined
+			if(commands[users[globalMessage.author.username].currentCommand].commands[command[1]] === undefined){ //If the interactive command in current command is undefined
 				globalMessage.channel.send(`Unrecognized command: '${command[1]} in ${users[globalMessage.author.username].currentCommand}.'`);
 			}else{
-				if(users[globalMessage.author.username].permissionLevel >= users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].permissionsLevel){ //If the user has sufficient interactive permissions
-					if((args.length != users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].argsCount) && (args.length != users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].argsEnforced)){ //If the arguments are of the proper number
+				if(users[globalMessage.author.username].permissionLevel >= commands[users[globalMessage.author.username].currentCommand].commands[command[1]].permissionsLevel){ //If the user has sufficient interactive permissions
+					if((args.length != commands[users[globalMessage.author.username].currentCommand].commands[command[1]].argsCount) && (commands[users[globalMessage.author.username].currentCommand].commands[command[1]].argsEnforced)){ //If the arguments are of the proper number
 						globalMessage.channel.send("Wrong number of arguments for " + command[1] + ".");
 					}else{
-						eval(users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].execute(args));
+						eval(commands[users[globalMessage.author.username].currentCommand].commands[command[1]].execute(args));
 					}
 				}
 			}
@@ -774,4 +811,4 @@ bot.on('message', (message)=>{
 
 
 bot.on('error', console.error);
-bot.login('--Bot Login token goes here--');
+bot.login('--Bot Login Goes Here--');
