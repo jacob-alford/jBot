@@ -13,22 +13,22 @@ function commandConstructor(options){
 	if(!(options.cmdName === undefined) && (typeof options.cmdName == "string")){
 		this.cmdName = options.cmdName;
 	}else{
-		console.error(`Error when delcaring new command ${this}, missing or wrong type for cmdName!`);
+		console.error(`Error when delcaring new command, missing or wrong type for cmdName!`);
 	}
 	if(!(options.execute === undefined) && (typeof options.execute == "function")){
 		this.execute = options.execute;
 	}else{
-		console.error(`Error when delcaring new command ${this}, missing or wrong type for execute!`);
+		console.error(`Error when delcaring new command, missing or wrong type for execute!`);
 	}
 	if(!(options.description === undefined) && (typeof options.description == "string")){
 		this.description = options.description;
 	}else{
-		console.error(`Error when delcaring new command ${this}, missing or wrong type for description!`);
+		console.error(`Error when delcaring new command, missing or wrong type for description!`);
 	}
 	if(!(options.category === undefined) && (typeof options.category == "string")){
 		this.category = options.category;
 	}else{
-		console.error(`Error when delcaring new command ${this}, missing or wrong type for category!`);
+		console.error(`Error when delcaring new command, missing or wrong type for category!`);
 	}
 	if(!(options.argsCount === undefined) && (!isNaN(options.argsCount))){
 		this.argsCount = options.argsCount;
@@ -97,10 +97,46 @@ function helpConstructor(options){
 		argsEnforced:false
 	});
 }
-
+//Constructs the help commands for interactive commands.
+function interactiveHelpConstruct(){
+	for(int in commands){
+		if(commands[int].interactive){
+			for(sub in commands[int].commands){
+				if(!(commands[int].commands[sub].cmdName === undefined)){
+					const name = sub;
+					if(!(name.includes("help"))){
+							commands[int].commands[name + "-help"] = new commandConstructor({
+							cmdName:name + "-help",
+							execute:args => {
+								let output = "";
+								output += "Proper Usage: `" + name + "` ";
+								if(!(commands[int].commands[name].args === undefined)){
+									for(argo in commands[int].commands[name].args){
+										const argumentName = commands[int].commands[name].args[argo].name;
+										output += "`" + argumentName + "` ";
+									}
+									output += "\n";
+									for(argu in commands[int].commands[name].args){
+										const argumentName = commands[int].commands[name].args[argu].name;
+										const argumentDesc = commands[int].commands[name].args[argu].desc;
+										output += "__" + argumentName + ":__ " + argumentDesc + "\n";
+									}
+								}
+								globalMessage.channel.send(output);
+							},
+							description:"A help function",
+							category:"int",
+							argsEnforced:false
+						});
+					}
+				}
+			}
+		}
+	}
+}
 //Interactive commands prevent top-level commands from being executed, and instead run their own subset of commands.
 //See GitHub for proper usage
-function interactiveCommand(cmd,options){
+function interactiveCommand(cmd,options,clientSide){
 
 	this.execute = (args) => {
 		globalMessage.channel.send("*You are now in interactive mode!*\nUse 'help' for more information, and 'exit' to escape back to primary commands.");
@@ -123,9 +159,10 @@ function interactiveCommand(cmd,options){
 		cmdName:"exit",
 		execute:(args) => {
 			globalMessage.channel.send("*You are no longer in interactive mode!*");
+			users[globalMessage.author.username].currentCommand = "";
 			users[globalMessage.author.username].interactiveMode = false;
 		},
-		description:`Exits '${this}', and returns to primary commands.`,
+		description:`Exits '${cmd.cmdName}', and returns to primary commands.`,
 		category:"int",
 		argsEnforced:false
 	});
@@ -133,9 +170,9 @@ function interactiveCommand(cmd,options){
 		cmdName:"help",
 		execute:(args) => {
 			let output = `You are currently in interactive mode.  The available options for '${cmd.cmdName}' are:\n`;
-				for(cmds in users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands){
-					if(!(cmds.includes("help")) && !(users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[cmds].execute === undefined)){
-						output += "[" + users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[cmds].permissionsLevel + "]`" + cmds + "` " + users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[cmds].description + "\n";
+				for(cmds in commands[cmd.cmdName].commands){
+					if(!(cmds.includes("help")) && !(commands[cmd.cmdName].commands[cmds].execute === undefined)){
+						output += "[" + commands[cmd.cmdName].commands[cmds].permissionsLevel + "]`" + cmds + "` " + commands[cmd.cmdName].commands[cmds].description + "\n";
 					}
 			}
 			globalMessage.channel.send(output);
@@ -144,7 +181,6 @@ function interactiveCommand(cmd,options){
 		category:"int",
 		argsEnforced:false
 	});
-
 }
 
 //------------Core Command Structure Samples, use command["name"] = new commandConstructor(...) to create a new command---------------
@@ -192,6 +228,7 @@ var meta = {
 for(user in users){
 	users[user].interactiveCheck = false;
 }
+interactiveHelpConstruct();
 
 bot.on('message', (message)=>{
 	globalMessage = message;
@@ -216,7 +253,19 @@ bot.on('message', (message)=>{
 			users[globalMessage.author.username].interactiveCommands = {};
 			for(fn in commands){
 				if(commands[fn].interactive){
-					users[globalMessage.author.username].interactiveCommands[fn] = commands[fn];
+					if(users[globalMessage.author.username].interactiveCommands[fn] === undefined){
+						users[globalMessage.author.username].interactiveCommands[fn] = {longMemory:{}}; // Any object that isn't a function will be stored in users.JSON under interactive commands > [cmdName] > longMemory
+					}
+					for(sub in commands[fn].commands){
+						if(commands[fn].commands[sub].cmdName === undefined){ //Not a subFunction
+							if(users[globalMessage.author.username].interactiveCommands[fn].longMemory[sub] === undefined){
+								users[globalMessage.author.username].interactiveCommands[fn].longMemory[sub] = [];
+							}
+							if(sub.includes("short")){ //For short term memory using sub_short, reset memory on restart.
+								users[globalMessage.author.username].interactiveCommands[fn].longMemory[sub] = [];
+							}
+						}
+					}
 				}
 			}
 		}
@@ -247,14 +296,14 @@ bot.on('message', (message)=>{
 				}
 			}
 		}else{
-			if(users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]] === undefined){ //If the interactive command in current command is undefined
+			if(commands[users[globalMessage.author.username].currentCommand].commands[command[1]] === undefined){ //If the interactive command in current command is undefined
 				globalMessage.channel.send(`Unrecognized command: '${command[1]} in ${users[globalMessage.author.username].currentCommand}.'`);
 			}else{
-				if(users[globalMessage.author.username].permissionLevel >= users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].permissionsLevel){ //If the user has sufficient interactive permissions
-					if((args.length != users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].argsCount) && (args.length != users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].argsEnforced)){ //If the arguments are of the proper number
+				if(users[globalMessage.author.username].permissionLevel >= commands[users[globalMessage.author.username].currentCommand].commands[command[1]].permissionsLevel){ //If the user has sufficient interactive permissions
+					if((args.length != commands[users[globalMessage.author.username].currentCommand].commands[command[1]].argsCount) && (commands[users[globalMessage.author.username].currentCommand].commands[command[1]].argsEnforced)){ //If the arguments are of the proper number
 						globalMessage.channel.send("Wrong number of arguments for " + command[1] + ".");
 					}else{
-						eval(users[globalMessage.author.username].interactiveCommands[users[globalMessage.author.username].currentCommand].commands[command[1]].execute(args));
+						eval(commands[users[globalMessage.author.username].currentCommand].commands[command[1]].execute(args));
 					}
 				}
 			}
