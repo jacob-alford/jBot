@@ -24,6 +24,7 @@ Name | Description
 readout | Displays the current stack.
 enter | Adds a number to the stack!
 drop | Moves the stack downward, deleting x!
+clear | Deletes every item in the stack.
 swap | Swaps x and y.
 roll | Shifts all elements downward, and moves x up to the highest index.
 add | Adds the numbers in x and y!
