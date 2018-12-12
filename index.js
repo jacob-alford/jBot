@@ -7,11 +7,8 @@ let channels = require("./channels.json"); //Connect to the channels JSON file
 let checkName = false;
 let oceanman = "OCEAN MAN 🌊 😍 Take me by the hand ✋ lead me to the land that you understand 🙌 🌊 OCEAN MAN 🌊 😍 The voyage 🚲 to the corner of the 🌎 globe is a real trip 👌 🌊 OCEAN MAN 🌊 😍 The crust of a tan man 👳 imbibed by the sand 👍 Soaking up the 💦 thirst of the land 💯";
 //------------Support Functions-------------------------
-function rnd(min,max){
+const rnd = (min,max) => Math.floor(Math.random()*(max-min+1))+min;
 
-	return Math.floor(Math.random()*(max-min+1))+min;
-
-}
 function colorObject(input,inHue,inSat,inBright){
 	if(inHue === undefined || inSat === undefined || inBright === undefined){
 		//Normalize inputs
@@ -811,4 +808,12 @@ bot.on('message', (message)=>{
 
 
 bot.on('error', console.error);
+client.on('guildMemberAdd', member => {
+  // Send the message to a designated channel on a server:
+  const channel = member.guild.channels.find(ch => ch.name === 'introductions');
+  // Do nothing if the channel wasn't found on this server
+  if (!channel) return;
+  // Send the message, mentioning the member
+  channel.send(`Welcome, ${member}!`);
+});
 bot.login('--Bot Login Goes Here--');
