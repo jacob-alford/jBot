@@ -86,6 +86,11 @@ function colorObject(input,inHue,inSat,inBright){
 	this.readoutHSB = function() {return "(" + Math.floor(this.hueHSB) + ", " + this.saturationHSB + ", " + this.brightnessHSB + ")";};
 	this.readoutRGB = function() {return "(" + this.red*255 + ", " + this.green*255 + ", " + this.blue*255 + ")";};
 }
+function commas(str) {
+  return (str + "").replace(/\b(\d+)((\.\d+)*)\b/g, function(a, b, c) {
+    return (b.charAt(0) > 0 && !(c || ".").lastIndexOf(".") ? b.replace(/(\d)(?=(\d{3})+$)/g, "$1,") : b) + c;
+  });
+}
 function hslToRGB(h,s,l){
 	var r,g,b;
 	if(s == 0){
@@ -336,6 +341,10 @@ commands["roll"] = new commandConstructor({
 	execute:args => {
 		if((globalMessage.content.includes("("))&&(!globalMessage.content.includes("and"))){
 			let DiceString = globalMessage.content.split(")");
+			if(Number(DiceString[0].replace(/\D/g,'')) > 10){
+				globalMessage.channel.send(`${Number(DiceString[0].replace(/\D/g,''))} is too many!  Try less than ten.`);
+				return;
+			}
 			let totalDice = 0;
 			let currentRoll;
 			for (let i=0; i<Number(DiceString[0].replace(/\D/g,'')); i++){
@@ -357,6 +366,12 @@ commands["roll"] = new commandConstructor({
 			globalMessage.channel.send("__**Total:**__ "+totalDice);
 		}else if((globalMessage.content.includes("("))&&(globalMessage.content.includes("and"))){
 				let DiceString = globalMessage.content.split(/[()]+/);
+				for(let i=0;i<DiceString.length;i++){
+					if(typeof DiceString[i] == "number") if(DiceString[i] > 10){
+						globalMessage.channel.send(`${Number(DiceString[i].replace(/\D/g,''))} is too many!  Try less than ten.`);
+						return;
+					}
+				}
 				let i;
 				let j;
 				let currentRoll;
@@ -546,6 +561,23 @@ commands["say"] = new commandConstructor({
 	argsCount:2,
 	argsEnforced:false,
 	args:{"args1":{name:"Message,'in'", desc:"The message to be sent, or 'in' to use the next argument."},"args2":{name:"Discord Channel",desc:"If 'in' is specified, this argument should contain the channel-name with which to send the message"},"args3":{name:"Message",desc:"The message to send if 'in' is specified."}},
+});
+commands["simpInterest"] = new commandConstructor({
+	cmdName:"simpInterest",
+	execute:args => {
+		console.log(args);
+		if(typeof Number(args[0])=="number" && typeof Number(args[1])=="number" && typeof Number(args[2])=="number") {
+			if(args[1] > 1) args[1] = args[1]/100;
+			globalMessage.channel.send(`A $${commas(args[0])} loan, at ${(args[1]*100).toFixed(3)}% interest for ${args[2]} years:\n**Total Balance:** __$${commas(args[0]*(1+args[1]*args[2]))}__\n**Total Accumulated Interest:** __$${commas(args[0]*(1+args[1]*args[2])-args[0])}__`);
+		}
+		else globalMessage.channel.send(`Make sure the arguments are numbers!`);
+	},
+	description:"Defines a word by constructing a URL",
+	category:"Finance",
+	argsCount:3,
+	argsEnforced:true,
+	args:{"args1":{name:"Principle", desc:"The initial amount of the loan"},"args2":{name:"APR",desc:"The percentage of interest accumulated over one year"},"args3":{name:"Duration",desc:"The length of time during which interest accumulates."}},
+	permissionsLevel:0
 });
 commands["rpn"] = new interactiveCommand(new commandConstructor({
 	cmdName:"rpn",
@@ -808,7 +840,7 @@ bot.on('message', (message)=>{
 
 
 bot.on('error', console.error);
-client.on('guildMemberAdd', member => {
+bot.on('guildMemberAdd', member => {
   // Send the message to a designated channel on a server:
   const channel = member.guild.channels.find(ch => ch.name === 'introductions');
   // Do nothing if the channel wasn't found on this server
@@ -816,4 +848,4 @@ client.on('guildMemberAdd', member => {
   // Send the message, mentioning the member
   channel.send(`Welcome, ${member}!`);
 });
-bot.login('--Bot Login Goes Here--');
+bot.login('--BOT LOGIN GOES HERE--');

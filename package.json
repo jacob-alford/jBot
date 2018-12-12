@@ -9,6 +9,6 @@
 	"author": "Jacob Alford",
 	"license": "ISC",
 	"dependencies": {
-		"discord.js": "^11.3.2"
+		"discord.js": "^11.4.2"
 	}
 }
