@@ -565,19 +565,51 @@ commands["say"] = new commandConstructor({
 commands["simpInterest"] = new commandConstructor({
 	cmdName:"simpInterest",
 	execute:args => {
-		console.log(args);
 		if(typeof Number(args[0])=="number" && typeof Number(args[1])=="number" && typeof Number(args[2])=="number") {
 			if(args[1] > 1) args[1] = args[1]/100;
 			globalMessage.channel.send(`A $${commas(args[0])} loan, at ${(args[1]*100).toFixed(3)}% interest for ${args[2]} years:\n**Total Balance:** __$${commas(args[0]*(1+args[1]*args[2]))}__\n**Total Accumulated Interest:** __$${commas(args[0]*(1+args[1]*args[2])-args[0])}__`);
 		}
 		else globalMessage.channel.send(`Make sure the arguments are numbers!`);
 	},
-	description:"Defines a word by constructing a URL",
+	description:"A trivial simple interest calculator!",
 	category:"Finance",
 	argsCount:3,
 	argsEnforced:true,
 	args:{"args1":{name:"Principle", desc:"The initial amount of the loan"},"args2":{name:"APR",desc:"The percentage of interest accumulated over one year"},"args3":{name:"Duration",desc:"The length of time during which interest accumulates."}},
 	permissionsLevel:0
+});
+commands["compInterest"] = new commandConstructor({
+	cmdName:"compInterest",
+	execute:args => {
+		if(typeof Number(args[0])=="number" && typeof Number(args[1])=="number" && typeof Number(args[2])=="number") {
+			if(args[1] > 1) args[1] = args[1]/100;
+			globalMessage.channel.send(`A $${commas(args[0])} compound interest loan, at ${(args[1]*100).toFixed(3)}% interest for ${args[2]} years, compounded ${args[3]} times per year:\n**Total Balance:** __$${commas((args[0]*Math.pow(1+args[1]/args[3],args[3]*args[2])).toFixed(2))}__\n**Total Accumulated Interest:** __$${commas((args[0]*Math.pow(1+args[1]/args[3],args[3]*args[2])-args[0]).toFixed(2))}__`);
+		}
+		else globalMessage.channel.send(`Make sure the arguments are numbers!`);
+	},
+	description:"A trivial compound interest calculator!",
+	category:"Finance",
+	argsCount:4,
+	argsEnforced:true,
+	args:{"args1":{name:"Principle", desc:"The initial amount of the loan"},"args2":{name:"APR",desc:"The percentage of interest accumulated over one year"},"args3":{name:"Duration",desc:"The length of time during which interest accumulates."},"args4":{name:"Compound Frequency",desc:"The number of times the principle is compounded throughout the duration."}},
+	permissionsLevel:0
+});
+commands["time"] = new commandConstructor({
+	cmdName:"time",
+	execute:args => {
+		let d = new Date();
+		let output = `
+	 		**[UTC]** __${d.toUTCString()}__\n
+			**[EAST]** __${d.toLocaleTimeString('en-US',{timeZone:"America/New_York"})}__\n
+			**[CENT]** __${d.toLocaleTimeString('en-US',{timeZone:"America/Chicago"})}__\n
+			**[MOUN]** __${d.toLocaleTimeString('en-US',{timeZone:"America/Denver"})}__\n
+			**[PACI]** __${d.toLocaleTimeString('en-US',{timeZone:"America/Los_Angeles"})}__
+									`;
+		globalMessage.channel.send(output);
+	},
+	description:`Check the time!`,
+	category:"Utility",
+	argsEnforced:false
 });
 commands["rpn"] = new interactiveCommand(new commandConstructor({
 	cmdName:"rpn",
@@ -848,4 +880,4 @@ bot.on('guildMemberAdd', member => {
   // Send the message, mentioning the member
   channel.send(`Welcome, ${member}!`);
 });
-bot.login('--BOT LOGIN GOES HERE--');
+bot.login('--BOT LOGIN TOKEN--');
